@@ -38,7 +38,8 @@ $app['controllers']['syncthing']['title'] = $app['name'];
 $app['core_requires'] = array(
     'app-syncthing-plugin-core',
     'syncthing',
-    'pwauth-webconfig',
+    'mod_authnz_external-webconfig',
+    'mod_authz_unixgroup-webconfig',
 );
 
 $app['core_file_manifest'] = array(
