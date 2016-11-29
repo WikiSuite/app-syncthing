@@ -22,6 +22,7 @@ $app['subcategory'] = lang('base_subcategory_file');
 $app['tooltip'] = array(
     lang('syncthing_tooltip_bw_limits'),
     lang('syncthing_tooltip_gui_access'),
+    lang('syncthing_admins'),
 );
 
 /////////////////////////////////////////////////////////////////////////////
@@ -35,6 +36,7 @@ $app['controllers']['syncthing']['title'] = $app['name'];
 /////////////////////////////////////////////////////////////////////////////
 
 $app['core_requires'] = array(
+    'app-syncthing-plugin-core',
     'syncthing',
     'pwauth-webconfig',
 );
@@ -45,6 +47,7 @@ $app['core_file_manifest'] = array(
 );
 
 $app['delete_dependency'] = array(
+    'app-syncthing-plugin-core',
     'app-syncthing-core',
     'syncthing'
 );

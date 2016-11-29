@@ -351,6 +351,25 @@ class Syncthing extends Daemon
         return $required_rules;
     }
 
+    /**
+     * Is GUI password protection set.
+     *
+     * @return boolean
+     * @throws Engine_Exception
+     */
+
+    public function is_gui_pw_set()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+        $file = new File(self::FILE_CONFIG, TRUE);
+        try {
+            $file->lookup_value("/^\s*<user>.*<\/user>/");
+            return TRUE;
+        } catch (File_No_Match_Exception $e) {
+            return FALSE;
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////////
     // V A L I D A T I O N   M E T H O D S
     ///////////////////////////////////////////////////////////////////////////////

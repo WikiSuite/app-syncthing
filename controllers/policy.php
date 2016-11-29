@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Syncthing controller.
+ * Syncthing administrator policy controller.
  *
  * @category   apps
  * @package    syncthing
@@ -30,17 +30,24 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
+// B O O T S T R A P
+///////////////////////////////////////////////////////////////////////////////
+
+$bootstrap = getenv('CLEAROS_BOOTSTRAP') ? getenv('CLEAROS_BOOTSTRAP') : '/usr/clearos/framework/shared';
+require_once $bootstrap . '/bootstrap.php';
+
+///////////////////////////////////////////////////////////////////////////////
 // D E P E N D E N C I E S
 ///////////////////////////////////////////////////////////////////////////////
 
-use \clearos\apps\syncthing\Syncthing as SyncthingLibrary;
+require clearos_app_base('groups') . '/controllers/groups.php';
 
 ///////////////////////////////////////////////////////////////////////////////
 // C L A S S
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Syncthing controller.
+ * Syncthing administrator policy controller.
  *
  * @category   apps
  * @package    syncthing
@@ -51,31 +58,14 @@ use \clearos\apps\syncthing\Syncthing as SyncthingLibrary;
  * @link       http://www.egloo.ca/clearos/marketplace/apps/syncthing
  */
 
-class Syncthing extends ClearOS_Controller
+class Policy extends Groups
 {
-
     /**
-     * Syncthing default controller
-     *
-     * @return view
+     * PPTP Server policy constructor.
      */
 
-    function index()
+    function __construct()
     {
-        // Load dependencies
-        //------------------
-
-        $this->load->library('syncthing/Syncthing');
-        $this->lang->load('syncthing');
-
-        // Load views
-        //-----------
-
-        $views = array('syncthing/server', 'syncthing/network', 'syncthing/summary', 'syncthing/settings');
-        $gui = $this->syncthing->get_gui_access();
-        if ($this->syncthing->get_gui_access() == SyncthingLibrary::VIA_REVERSE_PROXY)
-            $views[] = 'syncthing/policy';
-
-        $this->page->view_forms($views, lang('syncthing_app_name'));
+        parent::__construct('syncthing', array('syncthing_plugin'));
     }
 }

@@ -36,6 +36,24 @@
 $this->lang->load('base');
 $this->lang->load('syncthing');
 
+if (isset($gui_access_help)) {
+    if ($gui_access_help['type'] == 'warn')
+        echo infobox_warning(
+            lang('base_warning'),
+            "<div>" . $gui_access_help['msg'] . "</div>"
+        );
+    else
+        echo infobox_info(
+            lang('base_information'),
+            "<div>" . $gui_access_help['msg'] . "</div>"
+        );
+}
+if (isset($gui_no_auth_warning))
+        echo infobox_critical(
+            lang('syncthing_danger'),
+            "<div>" . $gui_no_auth_warning . "</div>"
+        );
+
 ///////////////////////////////////////////////////////////////////////////////
 // Form open
 ///////////////////////////////////////////////////////////////////////////////
