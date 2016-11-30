@@ -58,7 +58,7 @@ if (isset($gui_no_auth_warning))
 // Form open
 ///////////////////////////////////////////////////////////////////////////////
 
-echo form_open('syncthing/settings/edit');
+echo form_open('syncthing/settings/edit', array('id' => 'syncthing-settings'));
 echo form_header(lang('base_settings'));
 
 ///////////////////////////////////////////////////////////////////////////////
