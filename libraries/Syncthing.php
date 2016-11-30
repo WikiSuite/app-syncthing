@@ -370,6 +370,23 @@ class Syncthing extends Daemon
         }
     }
 
+    /**
+     * Is bootstrapped.
+     *
+     * @return boolean
+     * @throws Engine_Exception
+     */
+
+    public function is_bootstrapped()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $file = new File(self::FILE_CONFIG, TRUE);
+        if (!$file->exists())
+            return FALSE;
+        return TRUE;
+    }
+
     ///////////////////////////////////////////////////////////////////////////////
     // V A L I D A T I O N   M E T H O D S
     ///////////////////////////////////////////////////////////////////////////////
