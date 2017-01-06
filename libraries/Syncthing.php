@@ -227,10 +227,13 @@ class Syncthing extends Daemon
         $proxy = new File(self::FILE_REVERSE_PROXY, TRUE);
         if (!$proxy->exists())
             throw new File_Not_Found_Exception(clearos_exception_message(lang("syncthing_reverse_proxy_configlet_not_found")));
-        if ($access == self::VIA_REVERSE_PROXY)
+        if ($access == self::VIA_REVERSE_PROXY) {
             $proxy->replace_lines('/^#ProxyPass*/', "ProxyPass /syncthing/ http://127.0.0.1:" . self::PORT_GUI . "/\n");
-        else
+            // If we're using reverse proxy with user (API) driven authentication, disable syncthing's Basic auth
+            $file->replace_lines_between("/<user>.*<\/user>/", "\t<user></user>\n", "/<gui.*>/", "/<\/gui>/");
+        } else {
             $proxy->replace_lines('/^ProxyPass*/', "#ProxyPass /syncthing/ http://127.0.0.1:" . self::PORT_GUI . "/\n");
+        }
     }
 
     /**
