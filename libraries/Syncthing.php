@@ -230,7 +230,11 @@ class Syncthing extends Daemon
         if ($access == self::VIA_REVERSE_PROXY) {
             $proxy->replace_lines('/^#ProxyPass*/', "ProxyPass /syncthing/ http://127.0.0.1:" . self::PORT_GUI . "/\n");
             // If we're using reverse proxy with user (API) driven authentication, disable syncthing's Basic auth
-            $file->replace_lines_between("/<user>.*<\/user>/", "\t<user></user>\n", "/<gui.*>/", "/<\/gui>/");
+            try {
+                $file->replace_lines_between("/<user>.*<\/user>/", "\t<user></user>\n", "/<gui.*>/", "/<\/gui>/");
+            } catch (File_No_Match_Exception $e) {
+                // Ignore
+            }
         } else {
             $proxy->replace_lines('/^ProxyPass*/', "#ProxyPass /syncthing/ http://127.0.0.1:" . self::PORT_GUI . "/\n");
         }
@@ -366,7 +370,7 @@ class Syncthing extends Daemon
         clearos_profile(__METHOD__, __LINE__);
         $file = new File(self::FILE_CONFIG, TRUE);
         try {
-            $file->lookup_value("/^\s*<user>.*<\/user>/");
+            $file->lookup_value("/^\s*<user>\w+<\/user>/");
             return TRUE;
         } catch (File_No_Match_Exception $e) {
             return FALSE;
