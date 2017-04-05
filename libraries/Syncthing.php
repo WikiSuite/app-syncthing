@@ -59,6 +59,7 @@ clearos_load_language('syncthing');
 use \clearos\apps\base\Configuration_File as Configuration_File;
 use \clearos\apps\base\Daemon as Daemon;
 use \clearos\apps\base\File as File;
+use \clearos\apps\base\Shell as Shell;
 use \clearos\apps\groups\Group_Factory;
 use \clearos\apps\incoming_firewall\Incoming as Incoming;
 use \clearos\apps\network\Iface_Manager as Iface_Manager;
@@ -68,6 +69,7 @@ use \clearos\apps\users\User_Manager_Factory;
 clearos_load_library('base/Configuration_File');
 clearos_load_library('base/Daemon');
 clearos_load_library('base/File');
+clearos_load_library('base/Shell');
 clearos_load_library('groups/Group_Factory');
 clearos_load_library('incoming_firewall/Incoming');
 clearos_load_library('network/Iface_Manager');
@@ -405,7 +407,7 @@ class Syncthing extends Daemon
                     'port' => $match[2]
                 ];
             }
-            if ($xml->gui-password != null)
+            if ($xml->gui->password != null)
                 $data[$user]['password'] = TRUE;
             else
                 $data[$user]['password'] = FALSE;
