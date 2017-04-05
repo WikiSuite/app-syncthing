@@ -4,7 +4,7 @@
 // General information
 ///////////////////////////////////////////////////////////////////////////// 
 $app['basename'] = 'syncthing';
-$app['version'] = '1.0.3';
+$app['version'] = '1.0.4';
 $app['release'] = '1';
 $app['vendor'] = 'Avantech';
 $app['packager'] = 'eGloo';
