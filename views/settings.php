@@ -48,11 +48,6 @@ if (isset($gui_access_help)) {
             "<div>" . $gui_access_help['msg'] . "</div>"
         );
 }
-if (isset($gui_no_auth_warning))
-        echo infobox_critical(
-            lang('syncthing_danger'),
-            "<div>" . $gui_no_auth_warning . "</div>"
-        );
 
 ///////////////////////////////////////////////////////////////////////////////
 // Form open
@@ -80,8 +75,8 @@ if ($edit) {
 
 echo field_input('version', $version, lang('syncthing_version'), TRUE);
 echo field_dropdown('gui_access', $gui_access_options, $gui_access, lang('syncthing_gui_access'), $read_only);
-echo field_dropdown('send_kb', $bw_options, $send_kb, lang('syncthing_max_send_kb'), $read_only);
-echo field_dropdown('receive_kb', $bw_options, $receive_kb, lang('syncthing_max_receive_kb'), $read_only);
+//echo field_dropdown('send_kb', $bw_options, $send_kb, lang('syncthing_max_send_kb'), $read_only);
+//echo field_dropdown('receive_kb', $bw_options, $receive_kb, lang('syncthing_max_receive_kb'), $read_only);
 echo field_button_set($buttons);
 
 ///////////////////////////////////////////////////////////////////////////////

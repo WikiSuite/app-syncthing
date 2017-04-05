@@ -56,17 +56,23 @@ clearos_load_language('syncthing');
 // Classes
 //--------
 
+use \clearos\apps\base\Configuration_File as Configuration_File;
 use \clearos\apps\base\Daemon as Daemon;
 use \clearos\apps\base\File as File;
+use \clearos\apps\groups\Group_Factory;
 use \clearos\apps\incoming_firewall\Incoming as Incoming;
 use \clearos\apps\network\Iface_Manager as Iface_Manager;
-use \clearos\apps\network\Network_Utils as Network_Utils;
+use \clearos\apps\two_factor_auth\Two_Factor_Auth;
+use \clearos\apps\users\User_Manager_Factory;
 
+clearos_load_library('base/Configuration_File');
 clearos_load_library('base/Daemon');
 clearos_load_library('base/File');
+clearos_load_library('groups/Group_Factory');
 clearos_load_library('incoming_firewall/Incoming');
 clearos_load_library('network/Iface_Manager');
-clearos_load_library('network/Network_Utils');
+clearos_load_library('two_factor_auth/Two_Factor_Auth');
+clearos_load_library('users/User_Manager_Factory');
 
 // Exceptions
 //-----------
@@ -76,11 +82,13 @@ use \clearos\apps\base\Engine_Exception as Engine_Exception;
 use \clearos\apps\base\Validation_Exception as Validation_Exception;
 use \clearos\apps\base\File_Not_Found_Exception as File_Not_Found_Exception;
 use \clearos\apps\base\File_No_Match_Exception as File_No_Match_Exception;
+use \clearos\apps\base\Folder_Not_Found_Exception as Folder_Not_Found_Exception;
 
 clearos_load_library('base/Engine_Exception');
 clearos_load_library('base/Validation_Exception');
 clearos_load_library('base/File_Not_Found_Exception');
 clearos_load_library('base/File_No_Match_Exception');
+clearos_load_library('base/Folder_Not_Found_Exception');
 
 ///////////////////////////////////////////////////////////////////////////////
 // C L A S S
@@ -104,12 +112,16 @@ class Syncthing extends Daemon
     // C O N S T A N T S
     ///////////////////////////////////////////////////////////////////////////////
 
-    const FILE_CONFIG = "/root/.config/syncthing/config.xml";
+    const FILE_CONFIG = "/etc/clearos/syncthing.conf";
+    const FILE_USER_CONFIG = "/.config/syncthing/config.xml";
     const FILE_REVERSE_PROXY = "/usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf";
+    const FILE_RESTART_MULTIUSER = "/var/clearos/framework/tmp/syncthing.restart";
     const PORT_PROTO_DATA = "22000:TCP";
     const PORT_PROTO_DISCOVERY = "21027:UDP";
-    const PORT_GUI = 8384;
+    const VIA_OTHER = "other";
     const VIA_LOCALHOST = "localhost";
+    const VIA_LAN = "lan";
+    const VIA_ANY = "any";
     const VIA_REVERSE_PROXY = "webconfig";
 
     ///////////////////////////////////////////////////////////////////////////////
@@ -135,17 +147,134 @@ class Syncthing extends Daemon
     }
 
     /**
+     * Get user settings.
+     *
+     * @return void
+     * @throws Engine_Exception
+     */
+
+    public function get_users()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+        $info = array();
+        try {
+            $user_factory = new User_Manager_Factory();
+            $user_manager = $user_factory->create();
+            $users = $user_manager->get_core_details();
+
+            $groupobj = Group_Factory::create('syncthing_plugin');
+            $group_info = $groupobj->get_info();
+            foreach ($users as $username => $details) {
+
+                $status = lang('base_disabled');
+                $enabled = FALSE;
+
+                if (in_array($username, $group_info['core']['members']))
+                    $enabled = TRUE;
+
+                try {
+                    if ($enabled)
+                        $status = lang('base_running');
+                } catch (Folder_Not_Found_Exception $e) {
+                    $size = 0;
+                    if ($enabled)
+                        $status = lang('syncthing_status_not_initialized');
+                }
+
+                if (!$this->get_running_state())
+                    $status = lang('base_stopped');
+                
+                $info[$username] = array(
+                    'enabled' => $enabled,
+                    'status' => $status,
+                    'size' => NULL
+                );
+                
+            }
+            return $info;
+        } catch (Exception $e) {
+            throw new Engine_Exception(clearos_exception_message($e), CLEAROS_ERROR);
+        }
+    }
+    /**
+     * Is enabled.
+     *
+     * @param String  $username username
+     *
+     * @return void
+     */
+
+    public function is_enabled($username)
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $options['validate_exit_code'] = FALSE;
+        $options['env'] = 'LANG=en_US';
+        $shell = new Shell();
+        $shell->execute(parent::COMMAND_SYSTEMCTL, "is-enabled syncthing@$username.service", TRUE, $options);
+        if ($shell->get_last_output_line() == 'enabled')
+            return TRUE;
+        return FALSE;
+    }
+
+    /**
+     * Get is running status for user.
+     *
+     * @param String  $username username
+     *
+     * @return void
+     */
+
+    public function is_running($username)
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $options['validate_exit_code'] = FALSE;
+        $shell = new Shell();
+        $shell->execute(parent::COMMAND_SYSTEMCTL, "is-active syncthing@$username.service", TRUE, $options);
+        if ($shell->get_last_output_line() == 'active')
+            return TRUE;
+        return FALSE;
+    }
+
+    /**
+     * Set enable/disable.
+     *
+     * @param String  $username username
+     * @param boolean $enabled
+     *
+     * @return void
+     */
+
+    public function set_state($username, $enabled)
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $options['validate_exit_code'] = FALSE;
+        $shell = new Shell();
+        if ($enabled) {
+            $shell->execute(parent::COMMAND_SYSTEMCTL, "enabled syncthing@$username.service", TRUE, $options);
+            $shell->execute(parent::COMMAND_SYSTEMCTL, "start syncthing@$username.service", TRUE, $options);
+        } else {
+            $shell->execute(parent::COMMAND_SYSTEMCTL, "disabled syncthing@$username.service", TRUE, $options);
+            $shell->execute(parent::COMMAND_SYSTEMCTL, "stop syncthing@$username.service", TRUE, $options);
+        }
+    }
+
+    /**
      * Get send rate limit.
+     *
+     * @param string  $path  path
      *
      * @return integer
      * @throws Engine_Exception
      */
 
-    function get_send_limit()
+    function get_send_limit($path)
     {
         clearos_profile(__METHOD__, __LINE__);
 
-        $file = new File(self::FILE_CONFIG, TRUE);
+        $file = new File($path . self::FILE_USER_CONFIG, TRUE);
         $limit = $file->lookup_value("/^\s*<maxSendKbps>/");
         return preg_replace('/<\/maxSendKbps>/', '', $limit);
     }
@@ -153,15 +282,17 @@ class Syncthing extends Daemon
     /**
      * Get receive rate limit.
      *
+     * @param string  $path  path
+     *
      * @return integer
      * @throws Engine_Exception
      */
 
-    function get_receive_limit()
+    function get_receive_limit($path)
     {
         clearos_profile(__METHOD__, __LINE__);
 
-        $file = new File(self::FILE_CONFIG, TRUE);
+        $file = new File($path . self::FILE_USER_CONFIG, TRUE);
         $limit = $file->lookup_value("/^\s*<maxRecvKbps>/");
         return preg_replace('/<\/maxRecvKbps>/', '', $limit);
     }
@@ -169,39 +300,188 @@ class Syncthing extends Daemon
     /**
      * Sets send rate limit.
      *
+     * @param string  $path  path
      * @param integer $limit send limit
      *
      * @return void
      * @throws Engine_Exception, Validation_Exception
      */
 
-    public function set_send_limit($limit)
+    public function set_send_limit($path, $limit)
     {
         clearos_profile(__METHOD__, __LINE__);
 
         Validation_Exception::is_valid($this->validate_max_send($limit));
 
-        $file = new File(self::FILE_CONFIG, TRUE);
+        $file = new File($path . self::FILE_USER_CONFIG, TRUE);
         $file->replace_lines("/<maxSendKbps>.*<\/maxSendKbps>/", "\t<maxSendKbps>$limit</maxSendKbps>\n");
     }
 
     /**
      * Sets receive rate limit.
      *
+     * @param string  $path  path
      * @param integer $limit receive limit
      *
      * @return void
      * @throws Engine_Exception, Validation_Exception
      */
 
-    public function set_receive_limit($limit)
+    public function set_receive_limit($path, $limit)
     {
         clearos_profile(__METHOD__, __LINE__);
 
         Validation_Exception::is_valid($this->validate_max_receive($limit));
 
-        $file = new File(self::FILE_CONFIG, TRUE);
+        $file = new File($path . self::FILE_USER_CONFIG, TRUE);
         $file->replace_lines("/<maxRecvKbps>.*<\/maxRecvKbps>/", "\t<maxRecvKbps>$limit</maxRecvKbps>\n");
+    }
+
+    /**
+     * Get LAN IP.
+     *
+     *
+     * @return String
+     * @throws Engine_Exception
+     */
+
+    public function get_lan_ip()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+        $iface_manager = new Iface_Manager();
+        return $iface_manager->get_most_trusted_ips()[0];
+    }
+
+    /**
+     * Restart all daemons.
+     *
+     * @throws Engine_Exception
+     */
+
+    function restart_multiuser()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+        $file = new File(self::FILE_RESTART_MULTIUSER);
+        if (!$file->exists())
+            return;
+        $users = $this->get_user_config();
+        foreach ($users as $user => $meta) {
+            try {
+                $this->set_state($user, FALSE);
+                if ($meta['enabled'] !== TRUE)
+                    $this->set_state($user, TRUE);
+            } catch (Exception $e) {
+            }
+        }
+        $file->delete();
+    }
+
+    /**
+     * Get user config.
+     *
+     * @return array
+     * @throws Engine_Exception
+     */
+
+    function get_user_config()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $data = [];
+        $users = $this->get_users();
+        foreach ($users as $user => $meta) {
+            $file = new File("/home/$user" . self::FILE_USER_CONFIG, TRUE);
+            if (!$file->exists())
+                continue;
+            $xml_source = $file->get_contents();
+
+            $xml = simplexml_load_string($xml_source);
+            if ($xml === FALSE)
+                continue;
+
+            if (preg_match("/(.*):(.*)/", $xml->gui->address, $match)) {
+                $data[$user] = [
+                    'ip' => $match[1],
+                    'port' => $match[2]
+                ];
+            }
+            if ($xml->gui-password != null)
+                $data[$user]['password'] = TRUE;
+            else
+                $data[$user]['password'] = FALSE;
+
+        }
+        $data = array_merge_recursive($users, $data);
+        return $data;
+    }
+
+    /**
+     * Update user config.
+     *
+     * @return void
+     * @throws Engine_Exception
+     */
+
+    function update()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $access = $this->get_gui_access();
+
+        $file = new File(self::FILE_RESTART_MULTIUSER);
+        if (!$file->exists())
+            $file->create("webconfig", "webconfig", "0644");
+
+        // Do not change anything if set to 'other'
+        if ($access == self::VIA_OTHER)
+            return;
+
+        $proxy = new File(self::FILE_REVERSE_PROXY, TRUE);
+        if (!$proxy->exists())
+            throw new File_Not_Found_Exception(clearos_exception_message(lang("syncthing_reverse_proxy_configlet_not_found")));
+
+        if ($access != self::VIA_REVERSE_PROXY) {
+            try {
+                $proxy->delete_lines('/^ProxyPass*/');
+                return;
+            } catch (File_No_Match_Exception $e) {
+                return;
+            }
+        }
+
+        $iface_manager = new Iface_Manager();
+        $lan = $iface_manager->get_most_trusted_ips()[0];
+        $users = $this->get_user_config();
+        foreach ($users as $user => $meta) {
+            $file = new File("/home/$user" . self::FILE_USER_CONFIG, TRUE);
+            if (!$file->exists())
+                continue;
+            $address = "127.0.0.1:" . $meta['port'];
+            if ($access == self::VIA_ANY)
+                $address = "0.0.0.0:" . $meta['port'];
+            else if ($access == self::VIA_LAN)
+                $address = $lan . ":" . $meta['port'];
+            else if ($access == self::VIA_LOCALHOST)
+                $address = "127.0.0.1:" . $meta['port'];
+            else if ($access == self::VIA_REVERSE_PROXY)
+                $address = "127.0.0.1:" . $meta['port'];
+        
+            $file->replace_lines_between("/<address>.*<\/address>/", "\t<address>$address</address>\n", "/<gui.*>/", "/<\/gui>/");
+            if ($access == self::VIA_REVERSE_PROXY) {
+                try {
+                    $file->lookup_line("^ProxyPass /syncthing/$user/  http://127.0.0.1:" . $meta['port'] . "/");
+                } catch (File_No_Match_Exception $e) {
+                    $proxy->add_lines_after("ProxyPassReverse /syncthing/$user/ http://127.0.0.1:" . $meta['port'] . "/\n", "/ProxyRequests Off/");
+                    $proxy->add_lines_after("ProxyPass /syncthing/$user/ http://127.0.0.1:" . $meta['port'] . "/\n", "/ProxyRequests Off/");
+                }
+                try {
+                    // If we're using reverse proxy with user (API) driven authentication, disable syncthing's Basic auth
+                    $file->replace_lines_between("/<user>.*<\/user>/", "\t<user></user>\n", "/<gui.*>/", "/<\/gui>/");
+                } catch (File_No_Match_Exception $e) {
+                    // Ignore
+                }
+            }
+        }
     }
 
     /**
@@ -214,30 +494,15 @@ class Syncthing extends Daemon
     function set_gui_access($access)
     {
         clearos_profile(__METHOD__, __LINE__);
-        $address = "127.0.0.1:" . self::PORT_GUI;
-        // Do not change anything if set to 'other'
-        if ($access == "other")
-            return;
-        if ($access != self::VIA_LOCALHOST && $access != self::VIA_REVERSE_PROXY)
-            $address = $access . ":" . self::PORT_GUI;
-        
-        $file = new File(self::FILE_CONFIG, TRUE);
-        $file->replace_lines_between("/<address>.*<\/address>/", "\t<address>$address</address>\n", "/<gui.*>/", "/<\/gui>/");
 
-        $proxy = new File(self::FILE_REVERSE_PROXY, TRUE);
-        if (!$proxy->exists())
-            throw new File_Not_Found_Exception(clearos_exception_message(lang("syncthing_reverse_proxy_configlet_not_found")));
-        if ($access == self::VIA_REVERSE_PROXY) {
-            $proxy->replace_lines('/^#ProxyPass*/', "ProxyPass /syncthing/ http://127.0.0.1:" . self::PORT_GUI . "/\n");
-            // If we're using reverse proxy with user (API) driven authentication, disable syncthing's Basic auth
-            try {
-                $file->replace_lines_between("/<user>.*<\/user>/", "\t<user></user>\n", "/<gui.*>/", "/<\/gui>/");
-            } catch (File_No_Match_Exception $e) {
-                // Ignore
-            }
-        } else {
-            $proxy->replace_lines('/^ProxyPass*/', "#ProxyPass /syncthing/ http://127.0.0.1:" . self::PORT_GUI . "/\n");
-        }
+        // Validation
+        // ----------
+
+        Validation_Exception::is_valid($this->validate_gui_access($access));
+
+        $this->_set_parameter('gui_access', $access);
+
+        $this->update();
     }
 
     /**
@@ -270,24 +535,14 @@ class Syncthing extends Daemon
     function get_gui_access()
     {
         clearos_profile(__METHOD__, __LINE__);
-        $access = self::VIA_LOCALHOST;
-        $file = new File(self::FILE_CONFIG, TRUE);
-        $address = preg_replace('/<\/address>/', '', $file->lookup_value_between("/^\s*<address>/", "/<gui/", "/<\/gui>/"));
-        list($ip, $port) = explode(":", $address);
-        if ($ip == "127.0.0.1") {
-            $file = new File(self::FILE_REVERSE_PROXY, TRUE);
-            if ($file->exists()) {
-                try {
-                    if ($file->lookup_line("/^ProxyPass*/"))
-                        $access = self::VIA_REVERSE_PROXY;
-                } catch (File_No_Match_Exception $e) {
-                    // Ignore
-                }
-            }
-        } else {
-            $access = $ip;
-        }
-        return $access;
+
+        if (!$this->is_loaded)
+            $this->_load_config();
+
+        if (isset($this->config['gui_access']))
+            return $this->config['gui_access'];
+
+        return self::VIA_OTHER;
     }
 
     /**
@@ -303,16 +558,11 @@ class Syncthing extends Daemon
         $options = array(
             self::VIA_LOCALHOST => lang('syncthing_gui_via_localhost'),
             self::VIA_REVERSE_PROXY => lang('syncthing_gui_via_webconfig'),
+            self::VIA_LAN => lang('syncthing_gui_via_lan'),
+            self::VIA_ANY => lang('syncthing_gui_via_any'),
+            self::VIA_OTHER => lang('syncthing_gui_via_other'),
         );
 
-        // Lookup IP addresses
-        $iface_manager = new Iface_Manager();
-        $network_interfaces = $iface_manager->get_interface_details();
-        foreach ($network_interfaces as $interface => $detail) {
-            if (!$detail['configured'])
-                continue;
-            $options[$detail['address']] = $detail['address'];
-        }
         return $options;
     }
 
@@ -327,8 +577,13 @@ class Syncthing extends Daemon
     {
         clearos_profile(__METHOD__, __LINE__);
 
-        // TODO - Do we need to look for others?
-        return array('syncthing@root.service');
+        $groupobj = Group_Factory::create('syncthing_plugin');
+        $group_info = $groupobj->get_info();
+
+        foreach ($group_info['core']['members'] as $user)
+            $services[] = 'syncthing@' . $user . '.service';
+
+        return $services;
     }
 
     /**
@@ -359,38 +614,19 @@ class Syncthing extends Daemon
     }
 
     /**
-     * Is GUI password protection set.
+     * Is password protection set.
      *
-     * @return boolean
      * @throws Engine_Exception
      */
 
-    public function is_gui_pw_set()
+    public function passwords_ok()
     {
         clearos_profile(__METHOD__, __LINE__);
-        $file = new File(self::FILE_CONFIG, TRUE);
-        try {
-            $file->lookup_value("/^\s*<user>\w+<\/user>/");
-            return TRUE;
-        } catch (File_No_Match_Exception $e) {
-            return FALSE;
+        $users = $this->get_user_config();
+        foreach ($users as $user => $meta) {
+            if ($meta['enable'] == TRUE && !$meta['password'])
+                return FALSE;
         }
-    }
-
-    /**
-     * Is bootstrapped.
-     *
-     * @return boolean
-     * @throws Engine_Exception
-     */
-
-    public function is_bootstrapped()
-    {
-        clearos_profile(__METHOD__, __LINE__);
-
-        $file = new File(self::FILE_CONFIG, TRUE);
-        if (!$file->exists())
-            return FALSE;
         return TRUE;
     }
 
@@ -450,4 +686,56 @@ class Syncthing extends Daemon
     // P R I V A T E   M E T H O D S
     ///////////////////////////////////////////////////////////////////////////////
 
+    /**
+     * Loads configuration files.
+     *
+     * @return void
+     * @throws Engine_Exception
+     */
+
+    protected function _load_config()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        $configfile = new Configuration_File(self::FILE_CONFIG, 'match', "/(\S*)\s*=\s*(.*)/");
+
+        try {
+            $this->config = $configfile->load();
+        } catch (Exception $e) {
+            throw new Engine_Exception(clearos_exception_message($e), CLEAROS_ERROR);
+        }
+
+        $this->is_loaded = TRUE;
+    }
+
+    /**
+     * Generic set routine.
+     *
+     * @param string $key   key name
+     * @param string $value value for the key
+     *
+     * @return  void
+     * @throws Engine_Exception
+     */
+
+    function _set_parameter($key, $value)
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        try {
+            $file = new File(self::FILE_CONFIG, TRUE);
+
+            if (!$file->exists())
+                $file->create('root', 'root', '0640');
+
+            $match = $file->replace_lines("/^$key\s*=\s*/", "$key = $value\n");
+
+            if (!$match)
+                $file->add_lines("$key=\"$value\"\n");
+        } catch (Exception $e) {
+            throw new Engine_Exception(clearos_exception_message($e), CLEAROS_ERROR);
+        }
+
+        $this->is_loaded = FALSE;
+    }
 }

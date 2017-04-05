@@ -35,8 +35,40 @@
 
 $this->lang->load('syncthing');
 
-if (!$is_running)
-    echo infobox_warning(
-        lang('syncthing_app_name'),
-        "<div>" . lang('syncthing_not_available') . "</div>"
+if (isset($gui_no_auth_warning))
+        echo infobox_critical(
+            lang('syncthing_danger'),
+            "<div>" . $gui_no_auth_warning . "</div>"
+        );
+
+///////////////////////////////////////////////////////////////////////////////
+// Summary table
+///////////////////////////////////////////////////////////////////////////////
+
+$items = array();
+
+foreach ($users as $username => $info) {
+    $item = array(
+        'title' => $username,
+        'action' => '',
+        'anchors' => NULL,
+        'details' => array(
+            $username,
+            ($info['enabled'] ? lang('base_enabled') : lang('base_disabled')),
+            $info['status'],
+            $info['port']
+        )
     );
+
+    $items[] = $item;
+}
+
+echo summary_table(
+    lang('syncthing_users'),
+    NULL,
+    array(lang('base_username'), lang('base_enabled'), lang('base_status'), lang('syncthing_gui_port')),
+    $items,
+    array(
+        'no_action' => TRUE
+    )
+);

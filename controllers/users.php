@@ -1,13 +1,13 @@
 <?php
 
 /**
- * Syncthing status controller
+ * Syncthing controller.
  *
  * @category   apps
  * @package    syncthing
  * @subpackage controllers
  * @author     eGloo <developer@egloo.ca>
- * @copyright  2013-2015 eGloo
+ * @copyright  2017 Avantech
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.egloo.ca/clearos/marketplace/apps/syncthing
  */
@@ -40,23 +40,25 @@ require_once $bootstrap . '/bootstrap.php';
 // D E P E N D E N C I E S
 ///////////////////////////////////////////////////////////////////////////////
 
+use \clearos\apps\syncthing\Syncthing as SyncthingLibrary;
+
 ///////////////////////////////////////////////////////////////////////////////
 // C L A S S
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
- * Syncthing status controller
+ * Syncthing controller.
  *
  * @category   apps
  * @package    syncthing
  * @subpackage controllers
  * @author     eGloo <developer@egloo.ca>
- * @copyright  2016 Avantech
+ * @copyright  2017 Avantech
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.egloo.ca/clearos/marketplace/apps/syncthing
  */
 
-class Summary extends ClearOS_Controller
+class Users extends ClearOS_Controller
 {
     /**
      * Syncthing users controller
@@ -72,9 +74,14 @@ class Summary extends ClearOS_Controller
         $this->lang->load('syncthing');
         $this->load->library('syncthing/Syncthing');
 
-        // Load view data
-        //---------------
-        $data['is_running'] = $this->syncthing->get_running_state();
+        try {
+            $data['users'] = $this->syncthing->get_user_config();
+            if ($data['gui_access'] != SyncthingLibrary::VIA_REVERSE_PROXY && !$this->syncthing->passwords_ok())
+                $data['gui_no_auth_warning'] = lang('syncthing_gui_no_auth');
+        } catch (Engine_Engine_Exception $e) {
+            $this->page->view_exception($e);
+            return;
+        }
 
         // Load views
         //-----------

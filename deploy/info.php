@@ -4,7 +4,7 @@
 // General information
 ///////////////////////////////////////////////////////////////////////////// 
 $app['basename'] = 'syncthing';
-$app['version'] = '1.0.2';
+$app['version'] = '1.0.3';
 $app['release'] = '1';
 $app['vendor'] = 'Avantech';
 $app['packager'] = 'eGloo';
@@ -20,7 +20,6 @@ $app['name'] = lang('syncthing_app_name');
 $app['category'] = lang('base_category_server');
 $app['subcategory'] = lang('base_subcategory_file');
 $app['tooltip'] = array(
-    lang('syncthing_tooltip_bw_limits'),
     lang('syncthing_tooltip_gui_access'),
     lang('syncthing_admins'),
 );
@@ -44,6 +43,20 @@ $app['core_requires'] = array(
 
 $app['core_file_manifest'] = array(
     'syncthing.php' => array('target' => '/var/clearos/base/daemon/syncthing.php'),
+    'syncthing.conf' => array(
+        'target' => '/etc/clearos/syncthing.conf',
+        'mode' => '0640',
+        'owner' => 'root',
+        'group' => 'root',
+        'config' => TRUE,
+        'config_params' => 'noreplace',
+    ),
+    'app-syncthing.cron' => array(
+        'target' => '/etc/cron.d/app-syncthing',
+        'mode' => '0644',
+        'owner' => 'root',
+        'group' => 'root',
+    ),
     'syncthing-webconfig-proxy.conf' => array('target' => '/usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf'),
 );
 

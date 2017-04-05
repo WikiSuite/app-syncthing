@@ -36,23 +36,7 @@ header('Content-Type: application/x-javascript');
 var lang_error = '<?php echo lang('base_error'); ?>';
 
 $(document).ready(function() {
-    if ($('#syncthing-settings').length == 0 && ($(location).attr('href').match('.*app\/syncthing$') != null))
-        is_running();
 });
 
-function is_running() {
-    $.ajax({
-        url: '/app/syncthing/server/status',
-        method: 'GET',
-        dataType: 'json',
-        success : function(json) {
-            if (json.status == 'running') {
-                window.location = '/app/syncthing';
-                return;
-            }
-            window.setTimeout(is_running, 1000);
-        }
-    });
-}
 // vim: syntax=javascript ts=4
 

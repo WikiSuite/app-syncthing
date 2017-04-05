@@ -71,13 +71,9 @@ class Syncthing extends ClearOS_Controller
         // Load views
         //-----------
 
-        $views = array('syncthing/server', 'syncthing/network', 'syncthing/summary');
-        if ($this->syncthing->is_bootstrapped()) {
-            $views[] = 'syncthing/settings';
-            $gui = $this->syncthing->get_gui_access();
-            if ($this->syncthing->get_gui_access() == SyncthingLibrary::VIA_REVERSE_PROXY)
-                $views[] = 'syncthing/policy';
-        }
+        $views = array('syncthing/server', 'syncthing/network', 'syncthing/settings', 'syncthing/users');
+        if ($this->syncthing->get_gui_access() == SyncthingLibrary::VIA_REVERSE_PROXY)
+            $views[] = 'syncthing/policy';
 
         $this->page->view_forms($views, lang('syncthing_app_name'));
     }

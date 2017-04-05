@@ -70,8 +70,8 @@ class Settings extends ClearOS_Controller
         $data = array(
             'edit' => FALSE,
             'version' => $this->syncthing->get_version(),
-            'send_kb' => $this->syncthing->get_send_limit(),
-            'receive_kb' => $this->syncthing->get_receive_limit(),
+            //'send_kb' => $this->syncthing->get_send_limit(),
+            //'receive_kb' => $this->syncthing->get_receive_limit(),
             'gui_access' => $this->syncthing->get_gui_access(),
             'gui_access_options' => $this->syncthing->get_gui_access_options(),
             'bw_options' => $this->syncthing->get_bw_options(),
@@ -79,20 +79,18 @@ class Settings extends ClearOS_Controller
 
         if ($data['gui_access'] == SyncthingLibrary::VIA_REVERSE_PROXY) {
             $data['gui_access_help'] = array('type' => 'info', 'msg' =>
-                sprintf(lang('syncthing_reverse_proxy_url'), "<a href='https://" . $_SERVER['SERVER_NAME'] . ":" .
-                $_SERVER['SERVER_PORT'] . "/syncthing/' target='_blank'>https://" . $_SERVER['SERVER_NAME'] . ":" .
-                $_SERVER['SERVER_PORT'] . "/syncthing/</a>")
+                sprintf(lang('syncthing_reverse_proxy_url'), "<block><strong>https://" . $_SERVER['SERVER_NAME'] . ":" .
+                $_SERVER['SERVER_PORT'] . "/syncthing/*USERNAME*/</strong></block>")
             );
         } else if ($data['gui_access'] == SyncthingLibrary::VIA_LOCALHOST) {
             $data['gui_access_help'] = array('type' => 'warn', 'msg' => lang('syncthing_console_access_only'));
         } else {
+            $hostname = $_SERVER['SERVER_NAME'];
+            if ($data['gui_access'] == SyncthingLibrary::VIA_LAN)
+                $hostname = $this->syncthing->get_lan_ip();
             $data['gui_access_help'] = array('type' => 'warn', 'msg' =>
-                sprintf(lang('syncthing_gui_on_ip'), "<a href='https://" . $data['gui_access'] . ":8384' target='_blank'>" .
-                "https://" . $data['gui_access'] . ":8384</a>")
+                sprintf(lang('syncthing_gui_on_ip'), "https://" . $hostname . ":GUI_Port")
             );
-            // Check to see that authentication is enabled
-            if (!$this->syncthing->is_gui_pw_set())
-                $data['gui_no_auth_warning'] = lang('syncthing_gui_no_auth');
         }
 
         $this->page->view_form('syncthing/settings', $data, lang('base_settings'));
@@ -115,8 +113,8 @@ class Settings extends ClearOS_Controller
         //---------------------
        
         $this->form_validation->set_policy('gui_access', 'syncthing/Syncthing', 'validate_gui_access');
-        $this->form_validation->set_policy('send_kb', 'syncthing/Syncthing', 'validate_max_send');
-        $this->form_validation->set_policy('receive_kb', 'syncthing/Syncthing', 'validate_max_receive');
+        //$this->form_validation->set_policy('send_kb', 'syncthing/Syncthing', 'validate_max_send');
+        //$this->form_validation->set_policy('receive_kb', 'syncthing/Syncthing', 'validate_max_receive');
         $form_ok = $this->form_validation->run();
 
         // Handle form submit
@@ -124,8 +122,8 @@ class Settings extends ClearOS_Controller
         if ($form_ok) {
             try {
                 $this->syncthing->set_gui_access($this->input->post('gui_access'));
-                $this->syncthing->set_send_limit($this->input->post('send_kb'));
-                $this->syncthing->set_receive_limit($this->input->post('receive_kb'));
+                //$this->syncthing->set_send_limit($this->input->post('send_kb'));
+                //$this->syncthing->set_receive_limit($this->input->post('receive_kb'));
                 if ($this->syncthing->get_status() == SyncthingLibrary::STATUS_RUNNING) {
                     // Reset doesn't work on this multi-service
                     $this->syncthing->set_running_state(FALSE);
@@ -143,8 +141,8 @@ class Settings extends ClearOS_Controller
         $data = array(
             'edit' => TRUE,
             'version' => $this->syncthing->get_version(),
-            'send_kb' => $this->syncthing->get_send_limit(),
-            'receive_kb' => $this->syncthing->get_receive_limit(),
+            //'send_kb' => $this->syncthing->get_send_limit(),
+            //'receive_kb' => $this->syncthing->get_receive_limit(),
             'gui_access' => $this->syncthing->get_gui_access(),
             'gui_access_options' => $this->syncthing->get_gui_access_options(),
             'bw_options' => $this->syncthing->get_bw_options(),
