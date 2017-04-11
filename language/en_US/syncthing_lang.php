@@ -1,5 +1,5 @@
 <?php
-$lang['syncthing_admins'] = 'Regardless of the Web Admin Access mode configured, it is your responsibility to understand and ensure the proper security mechanisms are in place to enure access to the admin utility can be peformed by the intended user(s) only.';
+$lang['syncthing_admins'] = 'Regardless of the Web Admin Access mode configuration, it is your responsibility to understand and ensure the proper security mechanisms are in place to ensure access to the admin utility can be peformed by the intended user(s) only.';
 $lang['syncthing_app_description'] = 'Syncthing is an alternative to proprietary sync and cloud services with something open, trustworthy and decentralized. You retain complete control over where your data is stored and who you choose to share it with.';
 $lang['syncthing_app_name'] = 'Syncthing';
 $lang['syncthing_console_access_only'] = 'Console/localhost access only is configured.  Your users will not be able to access Syncthing\'s admin GUI without making modifications to your server.';
