@@ -434,22 +434,9 @@ class Syncthing extends Daemon
         if (!$file->exists())
             $file->create("webconfig", "webconfig", "0644");
 
-        // Do not change anything if set to 'other'
-        if ($access == self::VIA_OTHER)
-            return;
-
         $proxy = new File(self::FILE_REVERSE_PROXY, TRUE);
         if (!$proxy->exists())
             throw new File_Not_Found_Exception(clearos_exception_message(lang("syncthing_reverse_proxy_configlet_not_found")));
-
-        if ($access != self::VIA_REVERSE_PROXY) {
-            try {
-                $proxy->delete_lines('/^ProxyPass*/');
-                return;
-            } catch (File_No_Match_Exception $e) {
-                return;
-            }
-        }
 
         $iface_manager = new Iface_Manager();
         $lan = $iface_manager->get_most_trusted_ips()[0];
@@ -471,16 +458,27 @@ class Syncthing extends Daemon
             $file->replace_lines_between("/<address>.*<\/address>/", "\t<address>$address</address>\n", "/<gui.*>/", "/<\/gui>/");
             if ($access == self::VIA_REVERSE_PROXY) {
                 try {
-                    $file->lookup_line("^ProxyPass /syncthing/$user/  http://127.0.0.1:" . $meta['port'] . "/");
+                    $proxy->lookup_line("RewriteEngine on");
                 } catch (File_No_Match_Exception $e) {
-                    $proxy->add_lines_after("ProxyPassReverse /syncthing/$user/ http://127.0.0.1:" . $meta['port'] . "/\n", "/ProxyRequests Off/");
-                    $proxy->add_lines_after("ProxyPass /syncthing/$user/ http://127.0.0.1:" . $meta['port'] . "/\n", "/ProxyRequests Off/");
+                    $proxy->replace_lines("/\s*RewriteEngine o.*/", "\tRewriteEngine on\n");
+                }
+                try {
+                    $proxy->lookup_line("^RewriteCond %(REMOTE_USER) \"$user\"");
+                } catch (File_No_Match_Exception $e) {
+                    $proxy->add_lines_after("\tRewriteCond %({REMOTE_USER} \"$user\"", "/RewriteEngine on\n/");
+                    $proxy->add_lines_after("\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\"  [P]", "/RewriteEngine on\n/");
                 }
                 try {
                     // If we're using reverse proxy with user (API) driven authentication, disable syncthing's Basic auth
                     $file->replace_lines_between("/<user>.*<\/user>/", "\t<user></user>\n", "/<gui.*>/", "/<\/gui>/");
                 } catch (File_No_Match_Exception $e) {
                     // Ignore
+                }
+            } else {
+                try {
+                    $proxy->lookup_line("RewriteEngine off");
+                } catch (File_No_Match_Exception $e) {
+                    $proxy->replace_lines("/\s*RewriteEngine o.*/", "\tRewriteEngine off\n");
                 }
             }
         }
