@@ -4,7 +4,7 @@
 // General information
 ///////////////////////////////////////////////////////////////////////////// 
 $app['basename'] = 'syncthing';
-$app['version'] = '1.0.7';
+$app['version'] = '1.0.8';
 $app['release'] = '1';
 $app['vendor'] = 'Avantech';
 $app['packager'] = 'eGloo';
@@ -57,7 +57,14 @@ $app['core_file_manifest'] = array(
         'owner' => 'root',
         'group' => 'root',
     ),
-    'syncthing-webconfig-proxy.conf' => array('target' => '/usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf'),
+    'syncthing-webconfig-proxy.conf' => array(
+        'target' => '/usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf',
+        'mode' => '0640',
+        'owner' => 'root',
+        'group' => 'root',
+        'config' => TRUE,
+        'config_params' => 'noreplace',
+    ),
 );
 
 $app['delete_dependency'] = array(

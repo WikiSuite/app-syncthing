@@ -1,7 +1,7 @@
 
 Name: app-syncthing
 Epoch: 1
-Version: 1.0.7
+Version: 1.0.8
 Release: 1%{dist}
 Summary: Syncthing
 License: GPLv3
@@ -40,7 +40,7 @@ mkdir -p -m 755 %{buildroot}/usr/clearos/apps/syncthing
 cp -r * %{buildroot}/usr/clearos/apps/syncthing/
 
 install -D -m 0644 packaging/app-syncthing.cron %{buildroot}/etc/cron.d/app-syncthing
-install -D -m 0644 packaging/syncthing-webconfig-proxy.conf %{buildroot}/usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf
+install -D -m 0640 packaging/syncthing-webconfig-proxy.conf %{buildroot}/usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf
 install -D -m 0640 packaging/syncthing.conf %{buildroot}/etc/clearos/syncthing.conf
 install -D -m 0644 packaging/syncthing.php %{buildroot}/var/clearos/base/daemon/syncthing.php
 
@@ -86,6 +86,6 @@ exit 0
 /usr/clearos/apps/syncthing/language
 /usr/clearos/apps/syncthing/libraries
 /etc/cron.d/app-syncthing
-/usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf
+%config(noreplace) /usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf
 %config(noreplace) /etc/clearos/syncthing.conf
 /var/clearos/base/daemon/syncthing.php
