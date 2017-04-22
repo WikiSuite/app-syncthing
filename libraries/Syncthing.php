@@ -458,15 +458,15 @@ class Syncthing extends Daemon
             $file->replace_lines_between("/<address>.*<\/address>/", "\t<address>$address</address>\n", "/<gui.*>/", "/<\/gui>/");
             if ($access == self::VIA_REVERSE_PROXY) {
                 try {
-                    $proxy->lookup_line("RewriteEngine on");
+                    $proxy->lookup_line("/RewriteEngine on/i");
                 } catch (File_No_Match_Exception $e) {
                     $proxy->replace_lines("/\s*RewriteEngine o.*/", "\tRewriteEngine on\n");
                 }
                 try {
-                    $proxy->lookup_line("^RewriteCond %(REMOTE_USER) \"$user\"");
+                    $proxy->lookup_line("/^RewriteCond %{REMOTE_USER} \"$user\"/i");
                 } catch (File_No_Match_Exception $e) {
-                    $proxy->add_lines_after("\tRewriteCond %({REMOTE_USER} \"$user\"", "/RewriteEngine on\n/");
-                    $proxy->add_lines_after("\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\"  [P]", "/RewriteEngine on\n/");
+                    $proxy->add_lines_after("\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\"  [P]\n", "/RewriteEngine on/i");
+                    $proxy->add_lines_after("\tRewriteCond %{REMOTE_USER} \"$user\"\n", "/RewriteEngine on/i");
                 }
                 try {
                     // If we're using reverse proxy with user (API) driven authentication, disable syncthing's Basic auth
@@ -476,9 +476,9 @@ class Syncthing extends Daemon
                 }
             } else {
                 try {
-                    $proxy->lookup_line("RewriteEngine off");
+                    $proxy->lookup_line("/RewriteEngine off/i");
                 } catch (File_No_Match_Exception $e) {
-                    $proxy->replace_lines("/\s*RewriteEngine o.*/", "\tRewriteEngine off\n");
+                    $proxy->replace_lines("/\s*RewriteEngine o.*/i", "\tRewriteEngine off\n");
                 }
             }
         }
