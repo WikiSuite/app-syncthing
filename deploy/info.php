@@ -4,9 +4,9 @@
 // General information
 ///////////////////////////////////////////////////////////////////////////// 
 $app['basename'] = 'syncthing';
-$app['version'] = '1.0.8';
+$app['version'] = '1.0.9';
 $app['release'] = '1';
-$app['vendor'] = 'Avantech';
+$app['vendor'] = 'WikiSuite';
 $app['packager'] = 'eGloo';
 $app['license'] = 'GPLv3';
 $app['license_core'] = 'LGPLv3';

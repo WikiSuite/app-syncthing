@@ -1,13 +1,13 @@
 
 Name: app-syncthing
 Epoch: 1
-Version: 1.0.8
+Version: 1.0.9
 Release: 1%{dist}
 Summary: Syncthing
 License: GPLv3
 Group: ClearOS/Apps
 Packager: eGloo
-Vendor: Avantech
+Vendor: WikiSuite
 Source: %{name}-%{version}.tar.gz
 Buildarch: noarch
 Requires: %{name}-core = 1:%{version}-%{release}
