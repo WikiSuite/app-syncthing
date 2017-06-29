@@ -65,6 +65,7 @@ use \clearos\apps\incoming_firewall\Incoming as Incoming;
 use \clearos\apps\network\Iface_Manager as Iface_Manager;
 use \clearos\apps\two_factor_auth\Two_Factor_Auth;
 use \clearos\apps\users\User_Manager_Factory;
+use \SimpleXMLElement as SimpleXMLElement;
 
 clearos_load_library('base/Configuration_File');
 clearos_load_library('base/Daemon');
@@ -116,8 +117,10 @@ class Syncthing extends Daemon
 
     const FILE_CONFIG = "/etc/clearos/syncthing.conf";
     const FILE_USER_CONFIG = "/.config/syncthing/config.xml";
+    const FILE_XML = "config.xml";
     const FILE_REVERSE_PROXY = "/usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf";
     const FILE_RESTART_MULTIUSER = "/var/clearos/framework/tmp/syncthing.restart";
+    const FOLDER_HOME = "/home";
     const PORT_PROTO_DATA = "22000:TCP";
     const PORT_PROTO_DISCOVERY = "21027:UDP";
     const VIA_OTHER = "other";
@@ -379,6 +382,55 @@ class Syncthing extends Daemon
     }
 
     /**
+     * Fix settings.
+     *
+     * @return null
+     * @throws Engine_Exception
+     */
+
+    function override_settings()
+    {
+        clearos_profile(__METHOD__, __LINE__);
+
+        // We only override settings in reverse proxy mode
+        if ($this->get_gui_access() != self::VIA_REVERSE_PROXY)
+            return; 
+
+        $users = $this->get_user_config();
+        foreach ($users as $user => $meta) {
+            if (!$meta['enabled']) {
+                $options['validate_exit_code'] = FALSE;
+                $shell = new Shell();
+                $shell->execute(parent::COMMAND_SYSTEMCTL, "stop syncthing@$user.service", TRUE, $options);
+                continue;
+            }
+            $req_restart = FALSE;
+            $file = new File(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG, TRUE);
+            if (!$file->exists())
+                continue;
+            $xml = $file->get_contents();
+            $config = new SimpleXMLElement($xml);
+            if (!empty($config->gui->password)) {
+                $config->gui->password = "";
+                $req_restart = TRUE;
+            }
+            if (strtolower($config->gui['tls']) === "true") {
+                $config->gui['tls'] = "false";
+                $req_restart = TRUE;
+            }
+            $temp = new File(self::FILE_XML, TRUE);
+            $temp->create($user, "allusers", "0600");
+            $temp->add_lines($config->asXML());
+            $temp->move_to(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG);
+            if ($req_restart && $meta['enabled']) {
+                $options['validate_exit_code'] = FALSE;
+                $shell = new Shell();
+                $shell->execute(parent::COMMAND_SYSTEMCTL, "restart syncthing@$user.service", TRUE, $options);
+            }
+        }
+    }
+
+    /**
      * Get user config.
      *
      * @return array
@@ -392,7 +444,7 @@ class Syncthing extends Daemon
         $data = [];
         $users = $this->get_users();
         foreach ($users as $user => $meta) {
-            $file = new File("/home/$user" . self::FILE_USER_CONFIG, TRUE);
+            $file = new File(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG, TRUE);
             if (!$file->exists())
                 continue;
             $xml_source = $file->get_contents();
@@ -442,7 +494,7 @@ class Syncthing extends Daemon
         $lan = $iface_manager->get_most_trusted_ips()[0];
         $users = $this->get_user_config();
         foreach ($users as $user => $meta) {
-            $file = new File("/home/$user" . self::FILE_USER_CONFIG, TRUE);
+            $file = new File(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG, TRUE);
             if (!$file->exists())
                 continue;
             $address = "127.0.0.1:" . $meta['port'];

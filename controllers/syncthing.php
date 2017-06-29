@@ -68,6 +68,7 @@ class Syncthing extends ClearOS_Controller
         $this->load->library('syncthing/Syncthing');
         $this->lang->load('syncthing');
 
+$this->syncthing->override_settings();
         // Load views
         //-----------
 

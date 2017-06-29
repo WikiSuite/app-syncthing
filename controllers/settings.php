@@ -80,7 +80,8 @@ class Settings extends ClearOS_Controller
         if ($data['gui_access'] == SyncthingLibrary::VIA_REVERSE_PROXY) {
             $data['gui_access_help'] = array('type' => 'info', 'msg' =>
                 sprintf(lang('syncthing_reverse_proxy_url'), "<block><strong>https://" . $_SERVER['SERVER_NAME'] . ":" .
-                $_SERVER['SERVER_PORT'] . "/syncthing/</strong></block>")
+                $_SERVER['SERVER_PORT'] . "/syncthing/</strong></block>") . "<div style='margin-top: 15px;' class='text-center'>" .
+                anchor_custom('/app/syncthing/settings/renew', lang('syncthing_renew_proxy_settings'), 'high') . "</div>"
             );
         } else if ($data['gui_access'] == SyncthingLibrary::VIA_LOCALHOST) {
             $data['gui_access_help'] = array('type' => 'warn', 'msg' => lang('syncthing_console_access_only'));
@@ -149,6 +150,22 @@ class Settings extends ClearOS_Controller
         );
 
         $this->page->view_form('syncthing/settings', $data, lang('base_settings'));
+    }
+
+    /**
+     * Renew.
+     */
+
+    function renew()
+    {
+        // Load libraries
+        //---------------
+
+        $this->load->library('syncthing/Syncthing');
+
+        $this->syncthing->update();
+        redirect('/syncthing');
+        return;
     }
 }
 

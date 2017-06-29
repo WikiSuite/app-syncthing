@@ -24,3 +24,4 @@ $lang['syncthing_tooltip_gui_access'] = 'For "Web Admin Access", select Access v
 $lang['syncthing_version'] = 'Syncthing Version';
 $lang['syncthing_users'] = 'Syncthing Users';
 $lang['syncthing_gui_port'] = 'GUI Port';
+$lang['syncthing_renew_proxy_settings'] = 'Renew Webconfig Reverse Proxy Settings';
