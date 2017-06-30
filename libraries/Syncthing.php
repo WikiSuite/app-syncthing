@@ -419,6 +419,8 @@ class Syncthing extends Daemon
                 $req_restart = TRUE;
             }
             $temp = new File(self::FILE_XML, TRUE);
+            if ($temp->exists())
+                $temp->delete();
             $temp->create($user, "allusers", "0600");
             $temp->add_lines($config->asXML());
             $temp->move_to(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG);
