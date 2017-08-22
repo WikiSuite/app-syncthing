@@ -4,13 +4,23 @@
 // General information
 ///////////////////////////////////////////////////////////////////////////// 
 $app['basename'] = 'syncthing';
-$app['version'] = '1.1.1';
+$app['version'] = '1.1.2';
 $app['release'] = '1';
 $app['vendor'] = 'WikiSuite';
-$app['packager'] = 'eGloo';
+$app['packager'] = 'WikiSuite';
 $app['license'] = 'GPLv3';
 $app['license_core'] = 'LGPLv3';
 $app['description'] = lang('syncthing_app_description');
+$app['powered_by'] = array(
+    'vendor' => NULL,
+    'packages' => array(
+        'syncthing' => array(
+            'name' => 'Syncthing',
+            'version' => '---',
+            'url' => 'https://syncthing.net/',
+        ),
+    ),
+);
 
 /////////////////////////////////////////////////////////////////////////////
 // App name and categories
