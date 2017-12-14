@@ -196,6 +196,7 @@ class Syncthing extends Daemon
                 );
                 
             }
+            ksort($info);
             return $info;
         } catch (Exception $e) {
             throw new Engine_Exception(clearos_exception_message($e), CLEAROS_ERROR);
@@ -428,6 +429,7 @@ class Syncthing extends Daemon
                 $options['validate_exit_code'] = FALSE;
                 $shell = new Shell();
                 $shell->execute(parent::COMMAND_SYSTEMCTL, "restart syncthing@$user.service", TRUE, $options);
+                sleep(3);
             }
         }
     }
@@ -482,6 +484,8 @@ class Syncthing extends Daemon
     {
         clearos_profile(__METHOD__, __LINE__);
 
+        $this->override_settings();
+
         $access = $this->get_gui_access();
 
         $file = new File(self::FILE_RESTART_MULTIUSER);
@@ -517,9 +521,10 @@ class Syncthing extends Daemon
                     $proxy->replace_lines("/\s*RewriteEngine o.*/", "\tRewriteEngine on\n");
                 }
                 try {
-                    $proxy->lookup_line("/^RewriteCond %{REMOTE_USER} \"$user\"/i");
+                    $proxy->lookup_line("/\s*RewriteCond %{REMOTE_USER} \"$user\"/i");
+                    $proxy->replace_lines("/\s*RewriteRule \"\\/syncthing\\/\\(\\.\\*\\)\" \"http:\\/\\/127\\.0\\.0\\.1:\d+\\/\\$1\" \\[P\\] # $user/i", "\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\" [P] # $user\n");
                 } catch (File_No_Match_Exception $e) {
-                    $proxy->add_lines_after("\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\"  [P]\n", "/RewriteEngine on/i");
+                    $proxy->add_lines_after("\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\" [P] # $user\n", "/RewriteEngine on/i");
                     $proxy->add_lines_after("\tRewriteCond %{REMOTE_USER} \"$user\"\n", "/RewriteEngine on/i");
                 }
                 try {

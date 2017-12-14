@@ -1,1 +1,7 @@
 #!/bin/sh
+
+CHECK=`grep "RewriteRule.*[P].*#" /usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf`
+if [ -z "$CHECK" ]; then
+    sed -i "/RewriteCond/d" /usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf
+    sed -i "/RewriteRule/d" /usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf
+fi
