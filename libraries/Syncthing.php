@@ -177,18 +177,25 @@ class Syncthing extends Daemon
                 if (in_array($username, $group_info['core']['members']))
                     $enabled = TRUE;
 
-                try {
-                    if ($enabled)
-                        $status = lang('base_running');
-                } catch (Folder_Not_Found_Exception $e) {
+                $file = new File(self::FOLDER_HOME . "/$username" . self::FILE_USER_CONFIG, TRUE);
+                if (!$file->exists()) {
                     $size = 0;
                     if ($enabled)
                         $status = lang('syncthing_status_not_initialized');
                 }
 
-                if (!$this->get_running_state())
+                if (!$this->get_running_state()) {
                     $status = lang('base_stopped');
-                
+                } else {
+                    $options['validate_exit_code'] = FALSE;
+                    $shell = new Shell();
+                    $exit_code = $shell->execute(self::COMMAND_SYSTEMCTL, "status syncthing@" . $username . ".service", FALSE, $options);
+    
+                    if ($exit_code !== 0)
+                        $status = lang('base_stopped');
+                    else
+                        $status = lang('base_running');
+                }
                 $info[$username] = array(
                     'enabled' => $enabled,
                     'status' => $status,
@@ -202,6 +209,26 @@ class Syncthing extends Daemon
             throw new Engine_Exception(clearos_exception_message($e), CLEAROS_ERROR);
         }
     }
+
+    /**
+     * Start user service.
+     *
+     * @param String  $username username
+     *
+     * @return void
+     */
+
+    public function start_user_service($username)
+    {
+        clearos_profile(__METHOD__, __LINE__);
+        try {
+            $shell = new Shell();
+            $exit_code = $shell->execute(self::COMMAND_SYSTEMCTL, "start syncthing@" . $username . ".service", TRUE);
+        } catch (Exception $e) {
+            throw new Engine_Exception(clearos_exception_message($e), CLEAROS_ERROR);
+        }
+    }
+
     /**
      * Is enabled.
      *
@@ -457,6 +484,10 @@ class Syncthing extends Daemon
             if ($xml === FALSE)
                 continue;
 
+            $data[$user] = [
+                'ip' => NULL,
+                'port' => null,
+            ];
             if (preg_match("/(.*):(.*)/", $xml->gui->address, $match)) {
                 $data[$user] = [
                     'ip' => $match[1],

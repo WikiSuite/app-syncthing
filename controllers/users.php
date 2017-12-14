@@ -88,4 +88,21 @@ class Users extends ClearOS_Controller
 
         $this->page->view_form('syncthing/summary', $data, lang('syncthing_app_name'));
     }
+
+    /**
+     * Start Syncthing service for user
+     *
+     * @return view
+     */
+
+    function start($username)
+    {
+        // Load dependencies
+        //------------------
+        $this->lang->load('syncthing');
+        $this->load->library('syncthing/Syncthing');
+        $this->syncthing->start_user_service($username);
+	redirect('/syncthing');
+	return;
+    }
 }

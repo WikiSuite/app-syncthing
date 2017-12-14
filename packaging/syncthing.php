@@ -23,6 +23,7 @@ $configlet = array(
     'process_name' => 'syncthing',
     'multiservice' => TRUE,
     'sleep' => 3,
+    'individual_running' => TRUE,
     'api_class' => 'Syncthing',
     'api_namespace' => 'syncthing',
     'reloadable' => FALSE,

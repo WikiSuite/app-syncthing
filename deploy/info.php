@@ -4,7 +4,7 @@
 // General information
 ///////////////////////////////////////////////////////////////////////////// 
 $app['basename'] = 'syncthing';
-$app['version'] = '1.1.4';
+$app['version'] = '1.1.5';
 $app['release'] = '1';
 $app['vendor'] = 'WikiSuite';
 $app['packager'] = 'WikiSuite';
@@ -49,7 +49,7 @@ $app['core_requires'] = array(
     'syncthing',
     'mod_authnz_external-webconfig',
     'mod_authz_unixgroup-webconfig',
-    'app-base >= 1:2.4.11',
+    'app-base >= 1:2.4.12',
 );
 
 $app['core_file_manifest'] = array(

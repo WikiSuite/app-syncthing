@@ -33,6 +33,7 @@
 // Load dependencies
 ///////////////////////////////////////////////////////////////////////////////
 
+$this->lang->load('base');
 $this->lang->load('syncthing');
 
 if (isset($gui_no_auth_warning))
@@ -56,7 +57,7 @@ foreach ($users as $username => $info) {
             $username,
             ($info['enabled'] ? lang('base_enabled') : lang('base_disabled')),
             $info['status'],
-            $info['port']
+            ($info['port'] == null || $info['status'] != lang('base_running') ? anchor_custom('users/start/' . $username, lang('base_start')) : $info['port']) 
         )
     );
 
