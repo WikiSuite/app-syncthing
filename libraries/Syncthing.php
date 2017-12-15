@@ -184,24 +184,20 @@ class Syncthing extends Daemon
                         $status = lang('syncthing_status_not_initialized');
                 }
 
-                if (!$this->get_running_state()) {
+                $options['validate_exit_code'] = FALSE;
+                $shell = new Shell();
+                $exit_code = $shell->execute(self::COMMAND_SYSTEMCTL, "status syncthing@" . $username . ".service", FALSE, $options);
+
+                if ($exit_code !== 0)
                     $status = lang('base_stopped');
-                } else {
-                    $options['validate_exit_code'] = FALSE;
-                    $shell = new Shell();
-                    $exit_code = $shell->execute(self::COMMAND_SYSTEMCTL, "status syncthing@" . $username . ".service", FALSE, $options);
-    
-                    if ($exit_code !== 0)
-                        $status = lang('base_stopped');
-                    else
-                        $status = lang('base_running');
-                }
+                else
+                    $status = lang('base_running');
+
                 $info[$username] = array(
                     'enabled' => $enabled,
                     'status' => $status,
                     'size' => NULL
                 );
-                
             }
             ksort($info);
             return $info;

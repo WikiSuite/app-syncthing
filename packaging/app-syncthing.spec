@@ -1,7 +1,7 @@
 
 Name: app-syncthing
 Epoch: 1
-Version: 1.1.5
+Version: 1.1.6
 Release: 1%{dist}
 Summary: Syncthing
 License: GPLv3
@@ -25,7 +25,7 @@ Requires: app-syncthing-plugin-core
 Requires: syncthing
 Requires: mod_authnz_external-webconfig
 Requires: mod_authz_unixgroup-webconfig
-Requires: app-base >= 1:2.4.12
+Requires: app-base >= 1:2.4.13
 
 %description core
 Syncthing is an alternative to proprietary sync and cloud services with something open, trustworthy and decentralized. You retain complete control over where your data is stored and who you choose to share it with.
