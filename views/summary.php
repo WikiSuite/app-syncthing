@@ -57,7 +57,7 @@ foreach ($users as $username => $info) {
             $username,
             ($info['enabled'] ? lang('base_enabled') : lang('base_disabled')),
             $info['status'],
-            ($info['port'] == null || $info['status'] != lang('base_running') ? anchor_custom('users/start/' . $username, lang('base_start')) : $info['port']) 
+            ($info['enabled'] && ($info['port'] == null || $info['status'] != lang('base_running')) ? anchor_custom('users/start/' . $username, lang('base_start')) : $info['port']) 
         )
     );
 
