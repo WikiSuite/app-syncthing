@@ -55,6 +55,7 @@ foreach ($users as $username => $info) {
         'anchors' => NULL,
         'details' => array(
             $username,
+            $info['id'],
             ($info['enabled'] ? lang('base_enabled') : lang('base_disabled')),
             $info['status'],
             ($info['enabled'] && ($info['port'] == null || $info['status'] != lang('base_running')) ? anchor_custom('syncthing/users/start/' . $username, lang('base_start')) : $info['port']) 
@@ -64,12 +65,13 @@ foreach ($users as $username => $info) {
     $items[] = $item;
 }
 
-echo summary_table(
+echo list_table(
     lang('syncthing_users'),
     NULL,
-    array(lang('base_username'), lang('base_enabled'), lang('base_status'), lang('syncthing_gui_port')),
+    array(lang('base_username'), lang('syncthing_device_id'), lang('base_enabled'), lang('base_status'), lang('syncthing_gui_port')),
     $items,
     array(
-        'no_action' => TRUE
+        'no_action' => TRUE,
+        'read_only' => TRUE
     )
 );

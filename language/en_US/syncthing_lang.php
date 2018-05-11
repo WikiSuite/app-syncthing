@@ -4,6 +4,7 @@ $lang['syncthing_app_description'] = 'Syncthing is an alternative to proprietary
 $lang['syncthing_app_name'] = 'Syncthing';
 $lang['syncthing_console_access_only'] = 'Console/localhost access only is configured.  Your users will not be able to access Syncthing\'s admin GUI without making modifications to your server.';
 $lang['syncthing_danger'] = 'Danger!';
+$lang['syncthing_device_id'] = 'Device ID';
 $lang['syncthing_external_warning'] = 'You have configured Syncthing so that the admin user interface may be accessible from outside your network (either by listening on the external interface or using Webconfig\'s reverse proxy).  Please ensure you have set a very strong password within Syncthing to access the management page.';
 $lang['syncthing_gui_access'] = 'Web Admin Access';
 $lang['syncthing_gui_no_auth'] = 'The Syncthing admin interface is configured to allow remote access without a password. This can easily give local users or hackers access to read and change any files on your computer. Please set a GUI Authentication User and Password in the Settings dialog ASAP.';

@@ -469,6 +469,7 @@ class Syncthing extends Daemon
         clearos_profile(__METHOD__, __LINE__);
 
         $data = [];
+        $hostname = gethostname();
         $users = $this->get_users();
         foreach ($users as $user => $meta) {
             $file = new File(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG, TRUE);
@@ -495,6 +496,10 @@ class Syncthing extends Daemon
             else
                 $data[$user]['password'] = FALSE;
 
+            $temp = $xml->xpath("//device[@name='$hostname']");
+            if (!empty($temp)) {
+                $data[$user]['id'] = $temp[0]['id'];
+            }
         }
         $data = array_merge_recursive($users, $data);
         return $data;
