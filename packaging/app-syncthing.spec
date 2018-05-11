@@ -1,7 +1,7 @@
 
 Name: app-syncthing
 Epoch: 1
-Version: 1.1.8
+Version: 1.1.9
 Release: 1%{dist}
 Summary: Syncthing
 License: GPLv3
