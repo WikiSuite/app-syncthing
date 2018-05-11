@@ -393,7 +393,7 @@ class Syncthing extends Daemon
         $file = new File(self::FILE_RESTART_MULTIUSER);
         if (!$file->exists())
             return;
-        $users = $this->get_user_config();
+        $users = $this->get_users_config();
         foreach ($users as $user => $meta) {
             try {
                 $this->set_state($user, FALSE);
@@ -420,7 +420,7 @@ class Syncthing extends Daemon
         if ($this->get_gui_access() != self::VIA_REVERSE_PROXY)
             return; 
 
-        $users = $this->get_user_config();
+        $users = $this->get_users_config();
         foreach ($users as $user => $meta) {
             if (!$meta['enabled']) {
                 $options['validate_exit_code'] = FALSE;
@@ -464,11 +464,12 @@ class Syncthing extends Daemon
      * @throws Engine_Exception
      */
 
-    function get_user_config()
+    function get_users_config()
     {
         clearos_profile(__METHOD__, __LINE__);
 
         $data = [];
+        $hostname = gethostname();
         $users = $this->get_users();
         foreach ($users as $user => $meta) {
             $file = new File(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG, TRUE);
@@ -495,6 +496,10 @@ class Syncthing extends Daemon
             else
                 $data[$user]['password'] = FALSE;
 
+            $temp = $xml->xpath("//device[@name='$hostname']");
+            if (!empty($temp)) {
+                $data[$user]['id'] = $temp[0]['id'];
+            }
         }
         $data = array_merge_recursive($users, $data);
         return $data;
@@ -525,7 +530,7 @@ class Syncthing extends Daemon
 
         $iface_manager = new Iface_Manager();
         $lan = $iface_manager->get_most_trusted_ips()[0];
-        $users = $this->get_user_config();
+        $users = $this->get_users_config();
         foreach ($users as $user => $meta) {
             $file = new File(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG, TRUE);
             if (!$file->exists())
@@ -708,7 +713,7 @@ class Syncthing extends Daemon
     public function passwords_ok()
     {
         clearos_profile(__METHOD__, __LINE__);
-        $users = $this->get_user_config();
+        $users = $this->get_users_config();
         foreach ($users as $user => $meta) {
             if ($meta['enable'] == TRUE && !$meta['password'])
                 return FALSE;

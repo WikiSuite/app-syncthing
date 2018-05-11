@@ -75,7 +75,7 @@ class Users extends ClearOS_Controller
         $this->load->library('syncthing/Syncthing');
 
         try {
-            $data['users'] = $this->syncthing->get_user_config();
+            $data['users'] = $this->syncthing->get_users_config();
             if ($data['gui_access'] != SyncthingLibrary::VIA_REVERSE_PROXY && !$this->syncthing->passwords_ok())
                 $data['gui_no_auth_warning'] = lang('syncthing_gui_no_auth');
         } catch (Engine_Engine_Exception $e) {
