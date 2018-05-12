@@ -1,0 +1,19 @@
+sudo: required
+language: php
+env:
+  global:
+  - DOCKER_IMAGE=montefuscolo/centos-rpmbuild
+services:
+- docker
+install: true
+script:
+- docker run --rm -v ${PWD}:/app -v /tmp/build:/root/rpmbuild/RPMS/noarch ${DOCKER_IMAGE}
+  run-rpmbuild -s /app/packaging/app-syncthing.spec -f /app
+deploy:
+  provider: releases
+  api_key:
+    secure: M7Mj51nFI7WKIZaZL2vTxziNhddazx6VDGsgXpHYDgZTHQUomFHYVoo4az6Q7m/Jj0XtQFt8MFzPhQEgUsG99SNO+1uWUAGxmj/xZVvKfDQ+rOcyYlpvWdw6YzfELer5bsZPXGsFvjGM5EAeSa6ga32R0hzimaNkoTc+ll87W/rIWTk8MIJLvYORQDbhBKz24GqE/F7+yVLVk0Q5K48a67+yZl5T6vTqL6csOLYEmCn9lWrZxC8M1zrOKWGAsoftttR2UtLlJKwm1H/TXvrmuhTeUy07Z4QFVayrBgys+8KfaZIlFb4CCJ87V26jV/wdJVKm4vWdp4d7OH2i/GaOBlRo5NxUYZJ6DBeDlFECU0zXFbnDiXwVFrIzvD5BMRYKoQYAnM4WjbejG4ltGGZ271n4xa/T1GjP6Dw8SsiUjrmb3Y2P+KfQm9STqfxabnm8xYF+qf4I5nU/uo6ohBgWIgg3NBhUd757w4tUDPWQ3FXt5QjYMzDA63FHDlx+wj3HFMdzBd04LwyqqAOWR4Og26OkRvfk7gyil2LrRdSoVZ7Ay6rGA+tY4zOnrBUV39v+2E9VOi6J23owvFzDbPGdAWCPcQVFy5qF+GGWV5xYNozGKwWm6f1zqW+yhyClRlZ7+ZUhR5Vj6ivqU/diy3QHTl7jo0R+fehKiyJpWaY0z7U=
+  file_glob: true
+  file: "/tmp/build/*"
+  on:
+    repo: fabiomontefuscolo/app-syncthing
