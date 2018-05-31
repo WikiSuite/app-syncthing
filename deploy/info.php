@@ -4,7 +4,7 @@
 // General information
 ///////////////////////////////////////////////////////////////////////////// 
 $app['basename'] = 'syncthing';
-$app['version'] = '1.1.11';
+$app['version'] = '1.1.12';
 $app['release'] = '1';
 $app['vendor'] = 'WikiSuite';
 $app['packager'] = 'WikiSuite';
