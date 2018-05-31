@@ -4,7 +4,7 @@
 // General information
 ///////////////////////////////////////////////////////////////////////////// 
 $app['basename'] = 'syncthing';
-$app['version'] = '1.1.10';
+$app['version'] = '1.1.11';
 $app['release'] = '1';
 $app['vendor'] = 'WikiSuite';
 $app['packager'] = 'WikiSuite';
@@ -45,7 +45,7 @@ $app['controllers']['syncthing']['title'] = $app['name'];
 /////////////////////////////////////////////////////////////////////////////
 
 $app['user_profile_widgets'] = [
-    'syncthing/user_profile_settings',
+    'syncthing/access_widget',
 ];
 
 /////////////////////////////////////////////////////////////////////////////

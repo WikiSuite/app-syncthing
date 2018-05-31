@@ -154,11 +154,13 @@ class Syncthing extends Daemon
     /**
      * Get user settings.
      *
+     * @param $selected selected username
+     *
      * @return void
      * @throws Engine_Exception
      */
 
-    public function get_users()
+    public function get_users($selected = null)
     {
         clearos_profile(__METHOD__, __LINE__);
         $info = array();
@@ -171,6 +173,8 @@ class Syncthing extends Daemon
             $group_info = $groupobj->get_info();
             foreach ($users as $username => $details) {
 
+                if ($selected != null && $selected != $username)
+                    continue;
                 $status = lang('base_disabled');
                 $enabled = FALSE;
 
@@ -464,7 +468,7 @@ class Syncthing extends Daemon
      * @throws Engine_Exception
      */
 
-    function get_users_config()
+    function get_users_config($selected = null)
     {
         clearos_profile(__METHOD__, __LINE__);
 
@@ -472,6 +476,8 @@ class Syncthing extends Daemon
         $hostname = gethostname();
         $users = $this->get_users();
         foreach ($users as $user => $meta) {
+            if ($selected != null && $selected != $user)
+                continue;
             $file = new File(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG, TRUE);
             if (!$file->exists())
                 continue;
@@ -491,7 +497,7 @@ class Syncthing extends Daemon
                     'port' => $match[2]
                 ];
             }
-            if ($xml->gui->password != null)
+            if (empty($xml->gui->password))
                 $data[$user]['password'] = TRUE;
             else
                 $data[$user]['password'] = FALSE;
