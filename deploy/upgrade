@@ -5,3 +5,8 @@ if [ -z "$CHECK" ]; then
     sed -i "/RewriteCond/d" /usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf
     sed -i "/RewriteRule/d" /usr/clearos/sandbox/etc/httpd/conf.d/syncthing.conf
 fi
+CHECK=`grep "StartLimitBurst=0" /etc/systemd/system/syncthing@.service`
+if [ -z "$CHECK" ]; then
+    sed -i "/^User=%i$/a StartLimitBurst=0" /etc/systemd/system/syncthing@.service
+    /usr/bin/systemctl daemon-reload
+fi

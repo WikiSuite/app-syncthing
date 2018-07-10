@@ -287,7 +287,7 @@ class Syncthing extends Daemon
         $shell = new Shell();
         if ($enabled) {
             $shell->execute(parent::COMMAND_SYSTEMCTL, "enabled syncthing@$username.service", TRUE, $options);
-            $shell->execute(parent::COMMAND_SYSTEMCTL, "start syncthing@$username.service", TRUE, $options);
+            $shell->execute(parent::COMMAND_SYSTEMCTL, "restart syncthing@$username.service", TRUE, $options);
         } else {
             $shell->execute(parent::COMMAND_SYSTEMCTL, "disabled syncthing@$username.service", TRUE, $options);
             $shell->execute(parent::COMMAND_SYSTEMCTL, "stop syncthing@$username.service", TRUE, $options);
@@ -387,26 +387,28 @@ class Syncthing extends Daemon
 
     /**
      * Restart all daemons.
+     * @param $force force restart
      *
      * @throws Engine_Exception
      */
 
-    function restart_multiuser()
+    function restart_multiuser($force = false)
     {
         clearos_profile(__METHOD__, __LINE__);
         $file = new File(self::FILE_RESTART_MULTIUSER);
-        if (!$file->exists())
+        if (!$force && !$file->exists())
             return;
         $users = $this->get_users_config();
         foreach ($users as $user => $meta) {
             try {
-                $this->set_state($user, FALSE);
-                if ($meta['enabled'] !== TRUE)
-                    $this->set_state($user, TRUE);
+                if ($force || ($meta['status'] && !$meta['enabled']) || (!$meta['status'] && $meta['enabled']))
+                    $this->set_state($user, $meta['enabled']);
             } catch (Exception $e) {
+                clearos_log('syncthing', $user . ":" . clearos_exception_message($e));
             }
         }
-        $file->delete();
+        if ($file->exists())
+            $file->delete();
     }
 
     /**

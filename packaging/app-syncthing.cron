@@ -1,2 +1,3 @@
 */10 * * * * root /usr/clearos/apps/syncthing/deploy/service-check >/dev/null 2>&1
+0 4 * * * root /usr/clearos/apps/syncthing/deploy/service-check -f >/dev/null 2>&1
 0 */4 * * * root /usr/clearos/apps/syncthing/deploy/config-check >/dev/null 2>&1

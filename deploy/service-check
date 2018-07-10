@@ -72,11 +72,11 @@ use \Exception as Exception;
 // Command line options
 //--------------------------------------------------------------------
 
-$short_options  = '';
-
-// Common
+$short_options = 'f';  // Force
 
 $options = getopt($short_options);
+
+$force = isset($options['f']) ? TRUE : FALSE;
 
 // Command line options
 //--------------------------------------------------------------------
@@ -84,7 +84,7 @@ $options = getopt($short_options);
 $syncthing = new Syncthing();
 
 try {
-    $syncthing->restart_multiuser();
+    $syncthing->restart_multiuser($force);
 } catch (Exception $e) {
     echo clearos_exception_message($e) . "\n";
 }
