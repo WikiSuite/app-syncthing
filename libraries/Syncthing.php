@@ -539,6 +539,18 @@ class Syncthing extends Daemon
         $iface_manager = new Iface_Manager();
         $lan = $iface_manager->get_most_trusted_ips()[0];
         $users = $this->get_users_config();
+        if ($access == self::VIA_REVERSE_PROXY) {
+            // Delete any users that don't exist anymore
+            $lines = $proxy->get_contents_as_array();
+            foreach ($lines as $line) {
+                if (preg_match("/RewriteCond %{REMOTE_USER} \"(.*)\"/", $line, $match)) {
+                    if (!array_key_exists($match[1], $users)) {
+                        $proxy->delete_lines("/\s*RewriteCond.* \"" . $match[1] . "\"$/i");
+                        $proxy->delete_lines("/\s*RewriteRule.* # " . $match[1] . "$/i");
+                    }
+                }
+            }
+        }
         foreach ($users as $user => $meta) {
             $file = new File(self::FOLDER_HOME . "/$user" . self::FILE_USER_CONFIG, TRUE);
             if (!$file->exists())
@@ -562,7 +574,16 @@ class Syncthing extends Daemon
                 }
                 try {
                     $proxy->lookup_line("/\s*RewriteCond %{REMOTE_USER} \"$user\"/i");
-                    $proxy->replace_lines("/\s*RewriteRule \"\\/syncthing\\/\\(\\.\\*\\)\" \"http:\\/\\/127\\.0\\.0\\.1:\d+\\/\\$1\" \\[P\\] # $user/i", "\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\" [P] # $user\n");
+                    if ($meta['enabled']) {
+                        $proxy->replace_lines("/\s*RewriteRule \"\\/syncthing\\/\\(\\.\\*\\)\" \"http:\\/\\/127\\.0\\.0\\.1:\d+\\/\\$1\" \\[P\\] # $user$/i", "\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\" [P] # $user\n");
+                    } else {
+                        try {
+                            $proxy->delete_lines("/\s*RewriteCond.* \"$user\"$/i");
+                            $proxy->delete_lines("/\s*RewriteRule.* # $user$/i");
+                        } catch (File_No_Match_Exception $e) {
+                            // Don't need to do anything
+                        }
+                    }
                 } catch (File_No_Match_Exception $e) {
                     $proxy->add_lines_after("\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\" [P] # $user\n", "/RewriteEngine on/i");
                     $proxy->add_lines_after("\tRewriteCond %{REMOTE_USER} \"$user\"\n", "/RewriteEngine on/i");

@@ -89,4 +89,12 @@ try {
     echo clearos_exception_message($e) . "\n";
 }
 
+if ($force) {
+    try {
+        $syncthing->update();
+    } catch (Exception $e) {
+        echo clearos_exception_message($e) . "\n";
+    }
+}
+
 // vim: syntax=php ts=4
