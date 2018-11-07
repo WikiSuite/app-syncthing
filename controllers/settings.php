@@ -7,7 +7,7 @@
  * @package    syncthing
  * @subpackage controllers
  * @author     eGloo <developer@egloo.ca>
- * @copyright  2016 Avantech
+ * @copyright  2016-2018 Avantech
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.egloo.ca/clearos/marketplace/apps/syncthing
  */
@@ -46,7 +46,7 @@ use \clearos\apps\syncthing\Syncthing as SyncthingLibrary;
  * @package    syncthing
  * @subpackage controllers
  * @author     eGloo <developer@egloo.ca>
- * @copyright  2016 Avantech
+ * @copyright  2016-2018 Avantech
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.egloo.ca/clearos/marketplace/apps/syncthing
  */
@@ -63,6 +63,8 @@ class Settings extends ClearOS_Controller
         //---------------
 
         $this->load->library('syncthing/Syncthing');
+        $this->lang->load('syncthing');
+        $this->lang->load('network');
 
         // Load view data
         //---------------
@@ -81,7 +83,7 @@ class Settings extends ClearOS_Controller
             $data['gui_access_help'] = array('type' => 'info', 'msg' =>
                 sprintf(lang('syncthing_reverse_proxy_url'), "<block><strong>https://" . $_SERVER['SERVER_NAME'] . ":" .
                 $_SERVER['SERVER_PORT'] . "/syncthing/</strong></block>") . "<div style='margin-top: 15px;' class='text-center'>" .
-                anchor_custom('/app/syncthing/settings/renew', lang('syncthing_renew_proxy_settings'), 'high') . "</div>"
+                anchor_custom('/app/syncthing/settings/renew', lang('syncthing_authentication_settings'), 'high') . "</div>"
             );
         } else if ($data['gui_access'] == SyncthingLibrary::VIA_LOCALHOST) {
             $data['gui_access_help'] = array('type' => 'warn', 'msg' => lang('syncthing_console_access_only'));
@@ -90,7 +92,7 @@ class Settings extends ClearOS_Controller
             if ($data['gui_access'] == SyncthingLibrary::VIA_LAN)
                 $hostname = $this->syncthing->get_lan_ip();
             $data['gui_access_help'] = array('type' => 'warn', 'msg' =>
-                sprintf(lang('syncthing_gui_on_ip'), "https://" . $hostname . ":GUI_Port")
+                sprintf(lang('syncthing_gui_on_ip'), "https://" . $hostname . ":{" . strtolower(lang('network_port')) . "}")
             );
         }
 
@@ -109,6 +111,7 @@ class Settings extends ClearOS_Controller
         //---------------
 
         $this->load->library('syncthing/Syncthing');
+        $this->lang->load('syncthing');
 
         // Set validation rules
         //---------------------

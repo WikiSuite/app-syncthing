@@ -7,7 +7,7 @@
  * @package    syncthing
  * @subpackage views
  * @author     eGloo <developer@egloo.ca>
- * @copyright  2016 Avantech
+ * @copyright  2016-2018 Avantech
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.egloo.ca/clearos/marketplace/apps/syncthing
  */
@@ -35,6 +35,7 @@
 
 $this->lang->load('base');
 $this->lang->load('syncthing');
+$this->lang->load('network');
 
 if (isset($gui_no_auth_warning))
         echo infobox_critical(
@@ -58,17 +59,25 @@ foreach ($users as $username => $info) {
             $info['id'],
             ($info['enabled'] ? lang('base_enabled') : lang('base_disabled')),
             $info['status'],
-            ($info['enabled'] && ($info['port'] == null || $info['status'] != lang('base_running')) ? anchor_custom('syncthing/users/start/' . $username, lang('base_start')) : $info['port']) 
+            ($info['enabled'] && ($info['port'] == null || $info['status'] != lang('base_running')) ? anchor_custom('syncthing/users/start/' . $username, lang('base_start')) : $info['port'])
         )
     );
 
     $items[] = $item;
 }
 
+$headers = [
+    lang('base_username'),
+    lang('syncthing_device_id'),
+    lang('base_enabled'),
+    lang('base_status'),
+    lang('network_port')
+];
+
 echo list_table(
     lang('syncthing_users'),
     NULL,
-    array(lang('base_username'), lang('syncthing_device_id'), lang('base_enabled'), lang('base_status'), lang('syncthing_gui_port')),
+    $headers,
     $items,
     array(
         'no_action' => TRUE,

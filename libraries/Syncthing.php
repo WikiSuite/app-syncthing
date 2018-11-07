@@ -7,7 +7,7 @@
  * @package    syncthing
  * @subpackage libraries
  * @author     eGloo <developer@egloo.ca>
- * @copyright  2016 Avantech
+ * @copyright  2016-2018 Avantech
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.egloo.ca/clearos/marketplace/apps/syncthing
  */
@@ -104,7 +104,7 @@ clearos_load_library('base/Folder_Not_Found_Exception');
  * @package    syncthing
  * @subpackage libraries
  * @author     eGloo <developer@egloo.ca>
- * @copyright  2016 Avantech
+ * @copyright  2016-2018 Avantech
  * @license    http://www.gnu.org/copyleft/gpl.html GNU General Public License version 3 or later
  * @link       http://www.egloo.ca/clearos/marketplace/apps/syncthing
  */
@@ -534,7 +534,7 @@ class Syncthing extends Daemon
 
         $proxy = new File(self::FILE_REVERSE_PROXY, TRUE);
         if (!$proxy->exists())
-            throw new File_Not_Found_Exception(clearos_exception_message(lang("syncthing_reverse_proxy_configlet_not_found")));
+            throw new File_Not_Found_Exception(clearos_exception_message(lang('syncthing_reverse_proxy_configlet_not_found')));
 
         $iface_manager = new Iface_Manager();
         $lan = $iface_manager->get_most_trusted_ips()[0];
@@ -677,7 +677,7 @@ class Syncthing extends Daemon
         clearos_profile(__METHOD__, __LINE__);
         $options = array(
             self::VIA_LOCALHOST => lang('syncthing_gui_via_localhost'),
-            self::VIA_REVERSE_PROXY => lang('syncthing_gui_via_webconfig'),
+            self::VIA_REVERSE_PROXY => lang('syncthing_gui_via_authentication'),
             self::VIA_LAN => lang('syncthing_gui_via_lan'),
             self::VIA_ANY => lang('syncthing_gui_via_any'),
             self::VIA_OTHER => lang('syncthing_gui_via_other'),
