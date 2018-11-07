@@ -68,11 +68,32 @@ class Access_Widget extends ClearOS_Controller
 
     function index()
     {
+        // Bail if root
+        //-------------
+
+        $username = $this->session->userdata('username');
+
+        if ($username === 'root')
+            return;
+
+        // Bail if not a syncthing users
+        //------------------------------
+
+        $this->load->factory('users/User_Factory', $username);
+
+        $user_info = $this->user->get_info();
+
+        if (!isset($user_info['plugins']['syncthing']) || !$user_info['plugins']['syncthing'])
+            return;
+
         // Load dependencies
         //------------------
 
         $this->lang->load('syncthing');
         $this->load->library('syncthing/Syncthing');
+
+        // Load the view data
+        //-------------------
 
         try {
             $data['status'] = $this->syncthing->get_users_config($this->session->userdata('username'))[$this->session->userdata('username')];
@@ -85,6 +106,9 @@ class Access_Widget extends ClearOS_Controller
             $this->page->view_exception($e);
             return;
         }
+
+        // Handle URL
+        //-----------
 
         if ($data['gui_access'] == SyncthingLibrary::VIA_REVERSE_PROXY) {
             $url = "https://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'] . "/syncthing/";
