@@ -543,7 +543,7 @@ class Syncthing extends Daemon
             // Delete any users that don't exist anymore
             $lines = $proxy->get_contents_as_array();
             foreach ($lines as $line) {
-                if (preg_match("/RewriteCond %{REMOTE_USER} \"(.*)\"/", $line, $match)) {
+                if (preg_match("/RewriteCond %{REMOTE_USER} =(.*)/", $line, $match)) {
                     if (!array_key_exists($match[1], $users)) {
                         $proxy->delete_lines("/\s*RewriteCond.* \"" . $match[1] . "\"$/i");
                         $proxy->delete_lines("/\s*RewriteRule.* # " . $match[1] . "$/i");
@@ -573,7 +573,7 @@ class Syncthing extends Daemon
                     $proxy->replace_lines("/\s*RewriteEngine o.*/", "\tRewriteEngine on\n");
                 }
                 try {
-                    $proxy->lookup_line("/\s*RewriteCond %{REMOTE_USER} \"$user\"/i");
+                    $proxy->lookup_line("/\s*RewriteCond %{REMOTE_USER} =$user/i");
                     if ($meta['enabled']) {
                         $proxy->replace_lines("/\s*RewriteRule \"\\/syncthing\\/\\(\\.\\*\\)\" \"http:\\/\\/127\\.0\\.0\\.1:\d+\\/\\$1\" \\[P\\] # $user$/i", "\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\" [P] # $user\n");
                     } else {
@@ -586,7 +586,7 @@ class Syncthing extends Daemon
                     }
                 } catch (File_No_Match_Exception $e) {
                     $proxy->add_lines_after("\tRewriteRule \"/syncthing/(.*)\" \"http://127.0.0.1:" . $meta['port'] . "/$1\" [P] # $user\n", "/RewriteEngine on/i");
-                    $proxy->add_lines_after("\tRewriteCond %{REMOTE_USER} \"$user\"\n", "/RewriteEngine on/i");
+                    $proxy->add_lines_after("\tRewriteCond %{REMOTE_USER} =$user\n", "/RewriteEngine on/i");
                 }
                 try {
                     // If we're using reverse proxy with user (API) driven authentication, disable syncthing's Basic auth

@@ -1,11 +1,11 @@
 
 Name: app-syncthing
 Epoch: 1
-Version: 1.2.2
-Release: 1%{dist}
+Version: 1.2.3
+Release: %{dist}
 Summary: Syncthing
 License: GPLv3
-Group: Applications/Apps
+Group: ClearOS/Apps
 Packager: WikiSuite
 Vendor: WikiSuite
 Source: %{name}-%{version}.tar.gz
@@ -18,9 +18,9 @@ Requires: app-user-dashboard
 Syncthing is an alternative to proprietary sync and cloud services with something open, trustworthy and decentralized. You retain complete control over where your data is stored and who you choose to share it with.
 
 %package core
-Summary: Syncthing - API
+Summary: Syncthing - Core
 License: LGPLv3
-Group: Applications/API
+Group: ClearOS/Libraries
 Requires: app-base-core
 Requires: app-syncthing-plugin-core
 Requires: syncthing
